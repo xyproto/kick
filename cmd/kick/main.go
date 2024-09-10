@@ -8,12 +8,17 @@ import (
 	"github.com/xyproto/kick"
 )
 
-const version = "1.6.0"
+const version = "1.7.0"
 
 func main() {
 	// Command-line flags for sound customization
 	kick808 := flag.Bool("808", false, "Generate a kick.wav like an 808 kick drum")
 	kick909 := flag.Bool("909", false, "Generate a kick.wav like a 909 kick drum")
+	kick707 := flag.Bool("707", false, "Generate a kick.wav like a 707 kick drum")
+	kickKORG := flag.Bool("korg", false, "Generate a kick.wav with KORG-style characteristics")
+	kickSOMA := flag.Bool("soma", false, "Generate a kick.wav with SOMA-style characteristics")
+	noiseType := flag.String("noise", "none", "Type of noise to mix in (none, white, pink, brown)")
+	noiseAmount := flag.Float64("noiseamount", 0.0, "Amount of noise to mix in (0.0 to 1.0)")
 	length := flag.Float64("length", 1000, "Length of the kick drum sample in milliseconds")
 	quality := flag.Int("quality", 44, "Sample rate in kHz (44, 48, 96, or 192)")
 	attack := flag.Float64("attack", 0.005, "Attack time in seconds")
@@ -57,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Determine characteristics for 808 or 909 kick
+	// Determine characteristics for different kick drum styles
 	if *kick808 {
 		*waveform = kick.WaveSine
 		*attack = 0.01
@@ -78,6 +83,52 @@ func main() {
 		*sweep = 0.7
 		*pitchDecay = 0.2
 		fmt.Println("Generating 909 kick with punchy, mid-range presence and quick decay.")
+	} else if *kick707 {
+		*waveform = kick.WaveTriangle
+		*attack = 0.005
+		*decay = 0.3
+		*release = 0.2
+		*drive = 0.3
+		*filterCutoff = 7000
+		*sweep = 0.6
+		*pitchDecay = 0.3
+		fmt.Println("Generating 707 kick with a classic, shorter punchy sound.")
+	} else if *kickKORG {
+		*waveform = kick.WaveSine
+		*attack = 0.008
+		*decay = 0.5
+		*release = 0.4
+		*drive = 0.6
+		*filterCutoff = 6000
+		*sweep = 0.8
+		*pitchDecay = 0.4
+		fmt.Println("Generating KORG-style kick with distinct analog punch.")
+	} else if *kickSOMA {
+		*waveform = kick.WaveTriangle
+		*attack = 0.004
+		*decay = 0.6
+		*release = 0.3
+		*drive = 0.5
+		*filterCutoff = 5500
+		*sweep = 0.7
+		*pitchDecay = 0.4
+		fmt.Println("Generating SOMA-style kick with experimental texture.")
+	}
+
+	// Determine noise type
+	var noise int
+	switch *noiseType {
+	case "white":
+		noise = kick.NoiseWhite
+	case "pink":
+		noise = kick.NoisePink
+	case "brown":
+		noise = kick.NoiseBrown
+	case "none":
+		noise = kick.NoiseNone
+	default:
+		fmt.Println("Invalid noise type. Choose from: none, white, pink, brown.")
+		os.Exit(1)
 	}
 
 	// Open the output file
@@ -92,7 +143,7 @@ func main() {
 	err = kick.GenerateKickWithEffects(
 		150.0, 40.0, sampleRate, *length/1000.0,
 		*waveform, *attack, *decay, *sustain, *release,
-		*drive, *filterCutoff, *sweep, *pitchDecay, outFile,
+		*drive, *filterCutoff, *sweep, *pitchDecay, noise, *noiseAmount, outFile,
 	)
 	if err != nil {
 		fmt.Println("Failed to generate kick:", err)
