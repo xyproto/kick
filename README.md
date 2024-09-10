@@ -1,9 +1,9 @@
 
 # Kick
 
-**kick** is an open-source Go package designed to generate high-quality kick drum samples. This project includes:
+This is a Go package for generating kick drum audio samples. The project is a bit experimental and a work in progress.
 
-This is a bit experimental and a work in progress.
+The repository includes:
 
 - A Go package for generating kick drum samples with a wide variety of parameters.
 - A command-line utility for generating kick drum samples (`cmd/kick`).
