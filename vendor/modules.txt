@@ -51,6 +51,74 @@ fyne.io/fyne/v2/widget
 fyne.io/systray
 fyne.io/systray/internal/generated/menu
 fyne.io/systray/internal/generated/notifier
+# github.com/AllenDang/cimgui-go v0.0.0-20240806122035-9ebf619d1d03
+## explicit; go 1.21
+github.com/AllenDang/cimgui-go
+github.com/AllenDang/cimgui-go/cimgui
+github.com/AllenDang/cimgui-go/cimgui/imgui
+github.com/AllenDang/cimgui-go/cimgui/imgui/backends
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_allegro5
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_android_opengl3
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_emscripten_wgpu
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_glfw_opengl2
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_glfw_opengl3
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_glfw_vulkan
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_glut_opengl2
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_null
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl2_directx11
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl2_opengl2
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl2_opengl3
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl2_sdlrenderer2
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl2_vulkan
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl3_opengl3
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_sdl3_sdlrenderer3
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_win32_directx10
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_win32_directx11
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_win32_directx12
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_win32_directx9
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/example_win32_opengl3
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/libs/emscripten
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/libs/glfw/include/GLFW
+github.com/AllenDang/cimgui-go/cimgui/imgui/examples/libs/usynergy
+github.com/AllenDang/cimgui-go/cimgui/imgui/misc/cpp
+github.com/AllenDang/cimgui-go/cimgui/imgui/misc/fonts
+github.com/AllenDang/cimgui-go/cimgui/imgui/misc/freetype
+github.com/AllenDang/cimgui-go/cimgui/imgui/misc/single_file
+github.com/AllenDang/cimgui-go/cimgui/imgui_markdown
+github.com/AllenDang/cimgui-go/cimgui/imnodes
+github.com/AllenDang/cimgui-go/cimgui/imnodes/example
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/b64
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/cgns
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/chartdir
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/cityhash
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/clapack
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/freeimage
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/gettimeofday
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/graphicsmagick
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/gts
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/igraph
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/libaiff
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/libmspack
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/libu2f-server
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/libuuid
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/modp-base64
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/openblas
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/ports/ragel
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/scripts/test_ports/vcpkg-ci-ankurvdev-embedresource/project
+github.com/AllenDang/cimgui-go/cimgui/imnodes/vcpkg/scripts/test_ports/vcpkg-ci-soci/project
+github.com/AllenDang/cimgui-go/cimgui/implot
+github.com/AllenDang/cimgui-go/lib/linux/x64
+github.com/AllenDang/cimgui-go/lib/macos/arm64
+github.com/AllenDang/cimgui-go/lib/macos/x64
+github.com/AllenDang/cimgui-go/lib/windows/x64
+github.com/AllenDang/cimgui-go/thirdparty/SDL/include
+github.com/AllenDang/cimgui-go/thirdparty/glfw/include/GLFW
+# github.com/AllenDang/giu v0.8.1
+## explicit; go 1.21
+github.com/AllenDang/giu
+# github.com/AllenDang/go-findfont v0.0.0-20200702051237-9f180485aeb8
+## explicit
+github.com/AllenDang/go-findfont
 # github.com/BurntSushi/toml v1.4.0
 ## explicit; go 1.18
 github.com/BurntSushi/toml
@@ -58,6 +126,9 @@ github.com/BurntSushi/toml/internal
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3
+## explicit
+github.com/faiface/mainthread
 # github.com/fredbi/uri v1.1.0
 ## explicit; go 1.19
 github.com/fredbi/uri
@@ -131,12 +202,21 @@ github.com/jeandeaual/go-locale
 # github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25
 ## explicit
 github.com/jsummers/gobmp
+# github.com/mazznoer/csscolorparser v0.1.5
+## explicit; go 1.12
+github.com/mazznoer/csscolorparser
+# github.com/napsy/go-css v0.0.0-20230611142900-9dd118f3874c
+## explicit; go 1.19
+github.com/napsy/go-css
 # github.com/nicksnyder/go-i18n/v2 v2.4.0
 ## explicit; go 1.18
 github.com/nicksnyder/go-i18n/v2/i18n
 github.com/nicksnyder/go-i18n/v2/i18n/template
 github.com/nicksnyder/go-i18n/v2/internal
 github.com/nicksnyder/go-i18n/v2/internal/plural
+# github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+## explicit; go 1.14
+github.com/pkg/browser
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
@@ -149,6 +229,9 @@ github.com/rymdport/portal/notification
 github.com/rymdport/portal/openuri
 github.com/rymdport/portal/settings
 github.com/rymdport/portal/settings/appearance
+# github.com/sahilm/fuzzy v0.1.1
+## explicit
+github.com/sahilm/fuzzy
 # github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 ## explicit; go 1.17
 github.com/srwiley/oksvg
@@ -168,6 +251,12 @@ github.com/yuin/goldmark/renderer
 github.com/yuin/goldmark/renderer/html
 github.com/yuin/goldmark/text
 github.com/yuin/goldmark/util
+# golang.design/x/hotkey v0.4.1
+## explicit; go 1.17
+golang.design/x/hotkey/mainthread
+# golang.design/x/mainthread v0.3.0
+## explicit; go 1.16
+golang.design/x/mainthread
 # golang.org/x/image v0.20.0
 ## explicit; go 1.18
 golang.org/x/image/ccitt
@@ -211,6 +300,9 @@ golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
+# gopkg.in/eapache/queue.v1 v1.1.0
+## explicit
+gopkg.in/eapache/queue.v1
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
