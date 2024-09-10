@@ -21,7 +21,7 @@ The repository includes:
 - **Noise Integration**: Add noise to your kick drum samples for extra texture and uniqueness.
 - **Multi-Oscillator Support**: Layer multiple oscillators to create complex and rich kick sounds.
 - **Command-line Utility**: Generate `.wav` files via the command-line using predefined or custom parameters.
-- **Graphical User Interface**: Adjust parameters via a simple UI, or experiment with randomly generated kicks using a genetic algorithm approach.
+- **Graphical User Interface**: Experiment with randomly generated kicks using a genetic algorithm approach.
 
 ## Installation
 
