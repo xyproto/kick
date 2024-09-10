@@ -13,7 +13,7 @@ import (
 )
 
 const numPads = 16
-const buttonSize = 100 // Fixed size for the pad buttons
+const buttonSize = 100
 
 // Function to play or save the generated kick
 func generateAndHandleKick(cfg *kick.Config, save bool) string {
@@ -83,7 +83,13 @@ func randomKickSettings() *kick.Config {
 	cfg.FilterCutoff = 2000 + rand.Float64()*6000
 	cfg.Sweep = rand.Float64() * 1.5
 	cfg.PitchDecay = rand.Float64() * 1.5
-	cfg.WaveformType = rand.Intn(7) // Random waveform (0 to 7)
+
+	if rand.Float64() < 0.1 {
+		cfg.WaveformType = rand.Intn(7)
+	} else {
+		cfg.WaveformType = rand.Intn(1)
+	}
+
 	return cfg
 }
 
@@ -109,9 +115,9 @@ func waveformAbbreviation(waveformType int) string {
 	}
 }
 
-// Mutate all the settings to create significant variations based on a base config, including waveform mutation
+// Mutate all the settings to create significant variations based on a base config
 func mutateAllPads(base *kick.Config) {
-	mutationFactor := 0.6
+	mutationFactor := 0.4
 	mutate := func(value float64) float64 {
 		return value + (rand.Float64()-0.5)*mutationFactor*value
 	}
@@ -127,23 +133,23 @@ func mutateAllPads(base *kick.Config) {
 		pads[i].Sweep = mutate(base.Sweep)
 		pads[i].PitchDecay = mutate(base.PitchDecay)
 
-		// Mutate waveform in ~20% of cases, otherwise stay with Sine or Triangle
-		if rand.Float64() < 0.2 {
+		// In 90% of cases, keep the waveform as Sine or Triangle; in 10%, mutate to any waveform (0 to 7)
+		if rand.Float64() < 0.1 {
 			pads[i].WaveformType = rand.Intn(7) // Randomly choose a new waveform
 		} else {
 			pads[i].WaveformType = rand.Intn(2) // Keep as Sine or Triangle
 		}
 
 		// Output a summary of the settings being used for each pad
-		fmt.Printf("Pad %d settings: Attack=%.3f, Decay=%.3f, Sustain=%.3f, Release=%.3f, Drive=%.3f, FilterCutoff=%.3f, Sweep=%.3f, PitchDecay=%.3f, Waveform=%s\n",
-			i+1, pads[i].Attack, pads[i].Decay, pads[i].Sustain, pads[i].Release, pads[i].Drive, pads[i].FilterCutoff, pads[i].Sweep, pads[i].PitchDecay, waveformAbbreviation(pads[i].WaveformType))
+		fmt.Printf("Pad %d: Waveform=%s, Attack=%.3f, Decay=%.3f, Sustain=%.3f, Release=%.3f, Drive=%.3f, FilterCutoff=%.3f, Sweep=%.3f, PitchDecay=%.3f\n",
+			i+1, waveformAbbreviation(pads[i].WaveformType), pads[i].Attack, pads[i].Decay, pads[i].Sustain, pads[i].Release, pads[i].Drive, pads[i].FilterCutoff, pads[i].Sweep, pads[i].PitchDecay)
 	}
 }
 
 // Deep copy function for Config struct
 func copyConfig(cfg *kick.Config) *kick.Config {
 	newCfg := *cfg
-	newCfg.OscillatorLevels = append([]float64(nil), cfg.OscillatorLevels...) // Deep copy the slice
+	newCfg.OscillatorLevels = append([]float64(nil), cfg.OscillatorLevels...) // Deep copy
 	return &newCfg
 }
 
@@ -207,6 +213,6 @@ func main() {
 	}
 
 	// Adjust the window size to fit the grid and buttons better
-	wnd := g.NewMasterWindow("Kick Drum Generator", 500, 700, g.MasterWindowFlagsNotResizable)
+	wnd := g.NewMasterWindow("Kick Drum Generator", 440, 650, g.MasterWindowFlagsNotResizable)
 	wnd.Run(loop)
 }
