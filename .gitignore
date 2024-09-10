@@ -5,4 +5,5 @@
 .DS_Store
 cmd/kick/kick
 cmd/kick/kick.wav
+cmd/ui/ui
 include.txt
