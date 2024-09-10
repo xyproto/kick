@@ -1,0 +1,8 @@
+*.bak
+*.o
+*.swp
+*.tmp
+.DS_Store
+cmd/kick/kick
+cmd/kick/kick.wav
+include.txt
