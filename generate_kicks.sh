@@ -39,4 +39,11 @@ echo "Generating various kick drum samples..."
 ./cmd/kick/kick --soma -o samples/weird_kick_4.wav --length 900 --quality 96 --waveform 1 --attack 0.005 --decay 0.3 --sustain 0.5 --release 0.3 --sweep 1.2 --filter 2500 --pitchdecay 0.5 --drive 0.6 --noise pink --noiseamount 0.4
 ./cmd/kick/kick --909 -o samples/weird_kick_5.wav --length 1100 --quality 96 --waveform 1 --attack 0.02 --decay 0.7 --sustain 0.4 --release 0.2 --sweep 1.5 --filter 7000 --pitchdecay 1.0 --drive 0.5 --noise white --noiseamount 0.3
 
-echo "All kick samples generated and stored in the 'samples' directory."
+# Convert all .wav files to .mp4 using ffmpeg
+for wav_file in samples/*.wav; do
+  mp4_file="${wav_file%.wav}.mp4"
+  echo "Converting $wav_file to $mp4_file..."
+  ffmpeg -i "$wav_file" -c:a aac "$mp4_file" -y
+done
+
+echo "All kick samples generated, converted to .mp4, and stored in the 'samples' directory."
