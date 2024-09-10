@@ -3,7 +3,8 @@
 *.swp
 *.tmp
 .DS_Store
+cmd/*/*.wav
 cmd/kick/kick
-cmd/kick/kick.wav
+cmd/mutator/mutator
 cmd/ui/ui
 include.txt
