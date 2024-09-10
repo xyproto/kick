@@ -1,7 +1,9 @@
 
 # Kick
 
-This is a Go package for generating kick drum audio samples. The project is a bit experimental and a work in progress.
+This is a Go package for generating kick drum audio samples.
+
+Note that the project is a bit experimental, a work in progress and that the generated samples aren't quite right, yet.
 
 The repository includes:
 
