@@ -29,7 +29,6 @@ func playKick(filePath string) {
 		}
 	}
 	cmd.Wait()
-	fmt.Println("Finished playing sound")
 }
 
 func main() {
