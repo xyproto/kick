@@ -7,7 +7,6 @@ The repository includes:
 
 - A Go package for generating kick drum samples with a wide variety of parameters.
 - A command-line utility for generating kick drum samples (`cmd/kick`).
-- A graphical interface for specifying parameters and generating kick drums (`cmd/ui`).
 - A GUI that allows the user to randomly mutate and refine kick drum samples in a genetic algorithm style (`cmd/mutator`).
 
 ## Requirements
@@ -22,7 +21,7 @@ The repository includes:
 - **Noise Integration**: Add noise to your kick drum samples for extra texture and uniqueness.
 - **Multi-Oscillator Support**: Layer multiple oscillators to create complex and rich kick sounds.
 - **Command-line Utility**: Generate `.wav` files via the command-line using predefined or custom parameters.
-- **Graphical User Interface (GUI)**: Adjust parameters via a simple UI, or experiment with randomly generated kicks using a genetic algorithm approach.
+- **Graphical User Interface**: Adjust parameters via a simple UI, or experiment with randomly generated kicks using a genetic algorithm approach.
 
 ## Installation
 
