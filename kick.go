@@ -8,6 +8,8 @@ import (
 	"io"
 	"math"
 	"math/rand"
+	"os"
+	"os/exec"
 
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
@@ -87,7 +89,86 @@ func NewConfig(startFreq, endFreq float64, sampleRate int, duration float64, bit
 		FilterBands:      []float64{200.0, 1000.0, 3000.0},
 		BitDepth:         bitDepth,
 	}, nil
+}
 
+// CopyConfig creates a deep copy of a Config struct
+func CopyConfig(cfg *Config) *Config {
+	newCfg := *cfg
+	newCfg.OscillatorLevels = append([]float64(nil), cfg.OscillatorLevels...) // Deep copy the slice
+	return &newCfg
+}
+
+// PlayWav plays a WAV file using mpv or ffmpeg
+func PlayWav(filePath string) {
+	cmd := exec.Command("mpv", filePath)
+	fmt.Printf("Running command: %v\n", cmd.Args)
+	err := cmd.Start()
+	if err != nil {
+		// Fallback to ffmpeg if mpv is not available
+		cmd = exec.Command("ffmpeg", "-i", filePath, "-f", "null", "-")
+		fmt.Printf("Running command: %v\n", cmd.Args)
+		err = cmd.Start()
+		if err != nil {
+			fmt.Println("Error playing sound with both mpv and ffmpeg:", err)
+			return
+		}
+	}
+	cmd.Wait()
+}
+
+// SaveTo saves the generated kick to a specified directory, avoiding filename collisions
+func (cfg *Config) SaveTo(directory string) (string, error) {
+	n := 1
+	var fileName string
+	for {
+		fileName = fmt.Sprintf("%s/kick%d.wav", directory, n)
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			break
+		}
+		n++
+	}
+
+	file, err := os.Create(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	cfg.Output = file
+
+	if err := cfg.GenerateKick(); err != nil {
+		return "", err
+	}
+
+	return fileName, nil
+}
+
+// GenerateKickTemp generates a kick and writes it to a temporary file
+func (cfg *Config) GenerateKickTemp() (string, error) {
+	file, err := os.CreateTemp("", "kick_*.wav")
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	cfg.Output = file
+
+	if err := cfg.GenerateKick(); err != nil {
+		return "", err
+	}
+
+	return file.Name(), nil
+}
+
+// Play generates a kick and plays it, removing the temporary file afterward
+func (cfg *Config) Play() error {
+	filePath, err := cfg.GenerateKickTemp()
+	if err != nil {
+		return err
+	}
+	defer os.Remove(filePath)
+	PlayWav(filePath)
+	return nil
 }
 
 func (cfg *Config) GenerateKick() error {
