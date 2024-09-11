@@ -22,13 +22,12 @@ const (
 // Global variables
 var (
 	activePadIndex   int
-	activeConfig     *kick.Config
 	pads             [numPads]*kick.Config
-	loadedWaveform   []int  // Loaded .wav file waveform data
-	trainingOngoing  bool   // Indicates whether the GA is running
-	wavFilePath      string = "kick808.wav" // Default .wav file path
-	statusMessage    string // Status message displayed at the bottom
-	cancelTraining   chan bool // Channel to cancel GA training
+	loadedWaveform   []int                     // Loaded .wav file waveform data
+	trainingOngoing  bool                      // Indicates whether the GA is running
+	wavFilePath      string    = "kick808.wav" // Default .wav file path
+	statusMessage    string                    // Status message displayed at the bottom
+	cancelTraining   chan bool                 // Channel to cancel GA training
 )
 
 // Dropdown selection index for the waveform
@@ -142,7 +141,7 @@ func optimizeSettings() {
 		population[i] = kick.NewRandom()
 	}
 
-	bestConfig := activeConfig
+	bestConfig := pads[activePadIndex]
 	bestFitness := math.Inf(1)
 	stagnationCount := 0
 
@@ -172,7 +171,7 @@ func optimizeSettings() {
 			if fitness < bestFitness {
 				bestFitness = fitness
 				bestConfig = kick.CopyConfig(individual)
-				activeConfig = bestConfig // Update UI sliders during training
+				pads[activePadIndex] = bestConfig // Save the best result to the active pad
 				improved = true
 
 				if bestFitness < 1e-3 {
@@ -201,6 +200,36 @@ func optimizeSettings() {
 		statusMessage = fmt.Sprintf("Generation %d: Best fitness = %f", generation, bestFitness)
 		g.Update() // Update UI with the new generation status
 	}
+
+	// After training, save the best result to the active pad and update the sliders
+	pads[activePadIndex] = bestConfig
+	g.Update() // Update the sliders with the best result
+}
+
+// Conditionally generate the "Find kick similar to wav" and "Stop training" buttons
+func generateTrainingButtons() g.Widget {
+	if len(loadedWaveform) > 0 {
+		if trainingOngoing {
+			return g.Row(
+				g.Button("Stop training").OnClick(func() {
+					if trainingOngoing {
+						cancelTraining <- true
+					}
+				}),
+			)
+		}
+		return g.Row(
+			g.Button("Find kick similar to wav").OnClick(func() {
+				if !trainingOngoing {
+					cancelTraining = make(chan bool)
+					trainingOngoing = true
+					go optimizeSettings()
+				}
+			}),
+		)
+	}
+	// Return a dummy widget if no button should be displayed
+	return g.Dummy(0, 0)
 }
 
 // Function to create a widget for a Config struct, with the color based on the config
@@ -208,25 +237,34 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 	return g.Style().SetColor(g.StyleColorButton, cfg.Color()).To(
 		g.Column(
 			g.Button(padLabel).Size(buttonSize, buttonSize).OnClick(func() {
-				// Update UI immediately
-				activeConfig = cfg
+				// Clear the status message when a pad is clicked
+				statusMessage = ""
+				// Set the clicked pad as active
 				activePadIndex = padIndex
 				// Then generate and play the sample
 				go func() {
-					err := cfg.Play()
+					err := pads[activePadIndex].Play()
 					if err != nil {
 						statusMessage = "Error: Failed to play kick."
 					}
 				}()
 			}),
 			g.Button("Mutate").OnClick(func() {
-				mutateConfig(cfg)
+				// Mutate the selected pad and display the mutated settings in the sliders
+				mutateConfig(pads[padIndex])
+				// Set the mutated pad as active
+				activePadIndex = padIndex
+				g.Update() // Update the sliders with the mutated settings
 			}),
 			g.Button("Save").OnClick(func() {
-				_, err := cfg.SaveTo(".")
+				// Save the active pad's settings
+				_, err := pads[activePadIndex].SaveTo(".")
 				if err != nil {
 					statusMessage = "Error: Failed to save kick."
+				} else {
+					statusMessage = "Kick saved successfully."
 				}
+				g.Update() // Update the status message
 			}),
 		),
 	)
@@ -234,80 +272,89 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 
 // Function to create sliders and dropdown for viewing and editing the selected pad's settings
 func createSlidersForSelectedPad() g.Widget {
-	if activeConfig == nil {
-		return g.Label("No pad selected")
-	}
+	cfg := pads[activePadIndex]
 
 	// Convert float64 to float32 for sliders
-	attack := float32(activeConfig.Attack)
-	decay := float32(activeConfig.Decay)
-	sustain := float32(activeConfig.Sustain)
-	release := float32(activeConfig.Release)
-	drive := float32(activeConfig.Drive)
-	filterCutoff := float32(activeConfig.FilterCutoff)
-	sweep := float32(activeConfig.Sweep)
-	pitchDecay := float32(activeConfig.PitchDecay)
+	attack := float32(cfg.Attack)
+	decay := float32(cfg.Decay)
+	sustain := float32(cfg.Sustain)
+	release := float32(cfg.Release)
+	drive := float32(cfg.Drive)
+	filterCutoff := float32(cfg.FilterCutoff)
+	sweep := float32(cfg.Sweep)
+	pitchDecay := float32(cfg.PitchDecay)
 
 	// List of available waveforms
 	waveforms := []string{"Sine", "Triangle", "Sawtooth", "Square", "Noise White", "Noise Pink", "Noise Brown"}
-	waveformSelectedIndex = int32(activeConfig.WaveformType)
+	waveformSelectedIndex = int32(cfg.WaveformType)
 
 	return g.Column(
-		g.Label(fmt.Sprintf("Adjust Settings for Selected Pad: Pad %d", activePadIndex+1)),
+		g.Label(fmt.Sprintf("Kick Pad %d settings:", activePadIndex+1)),
+		g.Dummy(30, 0),
 		g.Row(
 			g.Label("Waveform"),
 			g.Combo("Waveform", waveforms[waveformSelectedIndex], waveforms, &waveformSelectedIndex).Size(150).OnChange(func() {
-				activeConfig.WaveformType = int(waveformSelectedIndex)
+				cfg.WaveformType = int(waveformSelectedIndex)
 			}),
 		),
 		g.Row(
 			g.Label("Attack"),
-			g.SliderFloat(&attack, 0.0, 1.0).Size(150).OnChange(func() { activeConfig.Attack = float64(attack) }),
+			g.SliderFloat(&attack, 0.0, 1.0).Size(150).OnChange(func() { cfg.Attack = float64(attack) }),
 		),
 		g.Row(
 			g.Label("Decay"),
-			g.SliderFloat(&decay, 0.1, 1.0).Size(150).OnChange(func() { activeConfig.Decay = float64(decay) }),
+			g.SliderFloat(&decay, 0.1, 1.0).Size(150).OnChange(func() { cfg.Decay = float64(decay) }),
 		),
 		g.Row(
 			g.Label("Sustain"),
-			g.SliderFloat(&sustain, 0.0, 1.0).Size(150).OnChange(func() { activeConfig.Sustain = float64(sustain) }),
+			g.SliderFloat(&sustain, 0.0, 1.0).Size(150).OnChange(func() { cfg.Sustain = float64(sustain) }),
 		),
 		g.Row(
 			g.Label("Release"),
-			g.SliderFloat(&release, 0.1, 1.0).Size(150).OnChange(func() { activeConfig.Release = float64(release) }),
+			g.SliderFloat(&release, 0.1, 1.0).Size(150).OnChange(func() { cfg.Release = float64(release) }),
 		),
 		g.Row(
 			g.Label("Drive"),
-			g.SliderFloat(&drive, 0.0, 1.0).Size(150).OnChange(func() { activeConfig.Drive = float64(drive) }),
+			g.SliderFloat(&drive, 0.0, 1.0).Size(150).OnChange(func() { cfg.Drive = float64(drive) }),
 		),
 		g.Row(
 			g.Label("Filter Cutoff"),
-			g.SliderFloat(&filterCutoff, 1000, 8000).Size(150).OnChange(func() { activeConfig.FilterCutoff = float64(filterCutoff) }),
+			g.SliderFloat(&filterCutoff, 1000, 8000).Size(150).OnChange(func() { cfg.FilterCutoff = float64(filterCutoff) }),
 		),
 		g.Row(
 			g.Label("Sweep"),
-			g.SliderFloat(&sweep, 0.1, 2.0).Size(150).OnChange(func() { activeConfig.Sweep = float64(sweep) }),
+			g.SliderFloat(&sweep, 0.1, 2.0).Size(150).OnChange(func() { cfg.Sweep = float64(sweep) }),
 		),
 		g.Row(
 			g.Label("Pitch Decay"),
-			g.SliderFloat(&pitchDecay, 0.1, 1.5).Size(150).OnChange(func() { activeConfig.PitchDecay = float64(pitchDecay) }),
+			g.SliderFloat(&pitchDecay, 0.1, 1.5).Size(150).OnChange(func() { cfg.PitchDecay = float64(pitchDecay) }),
 		),
-		// Buttons under the sliders: Play, Mutate all, Save
-		g.Button("Play").OnClick(func() {
-			err := activeConfig.Play()
-			if err != nil {
-				statusMessage = "Error: Failed to play kick."
-			}
-		}),
-		g.Button("Mutate all").OnClick(func() {
-			mutateAllPads(activeConfig)
-		}),
-		g.Button("Save").OnClick(func() {
-			_, err := activeConfig.SaveTo(".")
-			if err != nil {
-				statusMessage = "Error: Failed to save kick."
-			}
-		}),
+		g.Dummy(30, 0),
+		g.Row(
+			// Buttons under the sliders: Play, Mutate all, Save
+			g.Button("Play").OnClick(func() {
+				// Clear the status message when "Play" is clicked
+				statusMessage = ""
+				err := pads[activePadIndex].Play()
+				if err != nil {
+					statusMessage = "Error: Failed to play kick."
+				}
+				g.Update() // Update the status message
+			}),
+			g.Button("Mutate all").OnClick(func() {
+				mutateAllPads(pads[activePadIndex])
+			}),
+			g.Button("Save").OnClick(func() {
+				// Save the active pad's settings
+				_, err := pads[activePadIndex].SaveTo(".")
+				if err != nil {
+					statusMessage = "Error: Failed to save kick."
+				} else {
+					statusMessage = "Kick saved successfully."
+				}
+				g.Update() // Update the status message
+			}),
+		),
 	)
 }
 
@@ -331,25 +378,23 @@ func loop() {
 			g.Column(padGrid...),
 			g.Column(
 				createSlidersForSelectedPad(),
-				g.InputText(&wavFilePath).Label("Enter path to .wav file").Size(300), // Default text is "kick808.wav"
-				g.Button("Load WAV").OnClick(func() {
-					err := loadWavFile()
-					if err != nil {
-						statusMessage = "Failed to load .wav file"
-					}
-				}),
-				g.Button("Make similar kick to wav").OnClick(func() {
-					if !trainingOngoing {
-						cancelTraining = make(chan bool)
-						trainingOngoing = true
-						go optimizeSettings()
-					}
-				}),
-				g.Button("Cancel").OnClick(func() {
-					if trainingOngoing {
-						cancelTraining <- true
-					}
-				}),
+				g.Dummy(30, 0),
+				g.Row(
+					g.InputText(&wavFilePath).Size(200), // Default text is "kick808.wav"
+					g.Button("Load WAV").OnClick(func() {
+						err := loadWavFile()
+						if err != nil {
+							statusMessage = "Failed to load .wav file"
+						}
+					}),
+				),
+				// Use g.Condition before g.Row to ensure that rows aren't empty
+				g.Condition(len(loadedWaveform) > 0 || trainingOngoing,
+					g.Layout{
+						g.Row(generateTrainingButtons()),
+					},
+					nil,
+				),
 			),
 		),
 		// Status message label at the bottom
@@ -365,9 +410,8 @@ func main() {
 
 	// Set the first pad as selected
 	activePadIndex = 0
-	activeConfig = pads[activePadIndex]
 
 	// Adjust the window size to fit the grid, buttons, and sliders better
-	wnd := g.NewMasterWindow("Kick Drum Generator", 760, 640, g.MasterWindowFlagsNotResizable)
+	wnd := g.NewMasterWindow("Kick Drum Generator", 860, 740, g.MasterWindowFlagsNotResizable)
 	wnd.Run(loop)
 }
