@@ -123,37 +123,6 @@ func mutateAllPads(base *kick.Config) {
 	}
 }
 
-// Function to mutate a single pad and update the UI with the mutated settings
-func mutateConfigAndSetActive(cfg *kick.Config, padIndex int) {
-	mutationFactor := 0.1
-
-	// Mutate the configuration
-	if rand.Float64() < mutationFactor {
-		cfg.Attack = cfg.Attack * (0.8 + rand.Float64()*0.4)
-		cfg.Decay = cfg.Decay * (0.8 + rand.Float64()*0.4)
-		cfg.Sustain = cfg.Sustain * (0.8 + rand.Float64()*0.4)
-		cfg.Release = cfg.Release * (0.8 + rand.Float64()*0.4)
-		cfg.Drive = cfg.Drive * (0.8 + rand.Float64()*0.4)
-		cfg.FilterCutoff = cfg.FilterCutoff * (0.8 + rand.Float64()*0.4)
-		cfg.Sweep = cfg.Sweep * (0.8 + rand.Float64()*0.4)
-		cfg.PitchDecay = cfg.PitchDecay * (0.8 + rand.Float64()*0.4)
-
-		// Mutate the waveform and noise amounts
-		if rand.Float64() < mutationFactor {
-			cfg.WaveformType = rand.Intn(7) // Mutate to any waveform type
-		}
-		if rand.Float64() < mutationFactor {
-			cfg.NoiseAmount = cfg.NoiseAmount * (0.8 + rand.Float64()*0.4)
-		}
-	}
-
-	// Set the mutated pad as active
-	activePadIndex = padIndex
-
-	// Update the UI with the mutated settings
-	g.Update() // Ensure the sliders and settings reflect the mutation
-}
-
 // Function to optimize the settings using a genetic algorithm without writing to disk
 func optimizeSettings() {
 	if len(loadedWaveform) == 0 {
@@ -223,7 +192,7 @@ func optimizeSettings() {
 		}
 
 		for i := 0; i < len(population); i++ {
-			mutateConfigAndSetActive(population[i], activePadIndex)
+			mutateConfig(population[i])
 		}
 
 		statusMessage = fmt.Sprintf("Generation %d: Best fitness = %f", generation, bestFitness)
@@ -244,6 +213,14 @@ func generateTrainingButtons() g.Widget {
 					if trainingOngoing {
 						cancelTraining <- true
 					}
+				}),
+				// Display "Play WAV" button when a WAV is loaded
+				g.Button("Play WAV").OnClick(func() {
+					err := playWavFile()
+					if err != nil {
+						statusMessage = "Error: Failed to play WAV"
+					}
+					g.Update() // Update status message for WAV playback
 				}),
 			)
 		}
@@ -286,17 +263,21 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 					}
 				}()
 			}),
+			// Mutate button: Mutate the selected pad and update the sliders
 			g.Button("Mutate").OnClick(func() {
-				// Mutate the selected pad and display the mutated settings in the sliders
-				mutateConfigAndSetActive(pads[padIndex], padIndex)
-				g.Update() // Update the sliders with the mutated settings
+				// Mutate the selected pad and update its settings
+				mutateConfig(pads[padIndex])
+				// Ensure the active pad is updated
+				activePadIndex = padIndex
+				// Trigger UI update to reflect mutated settings in sliders
+				g.Update() // Refresh the sliders with the mutated settings
 			}),
+			// Save button: Save the current pad's configuration as a .wav file
 			g.Button("Save").OnClick(func() {
-				// Save the active pad's settings
-				fileName := fmt.Sprintf("kick%d.wav", padIndex+1)
-				_, err := pads[activePadIndex].SaveTo(fileName)
+				// Save the active pad's settings to a .wav file
+				fileName, err := pads[padIndex].SaveTo(".")
 				if err != nil {
-					statusMessage = fmt.Sprintf("Error: Failed to save kick to %s", fileName)
+					statusMessage = fmt.Sprintf("Error: Failed to save kick to %s", ".")
 				} else {
 					statusMessage = fmt.Sprintf("Kick saved to %s", fileName)
 				}
@@ -304,6 +285,32 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 			}),
 		),
 	)
+}
+
+// Function to mutate a single config
+func mutateConfig(cfg *kick.Config) {
+
+	mutationFactor := 0.1
+
+	// Mutate the configuration
+	if rand.Float64() < mutationFactor {
+		cfg.Attack = cfg.Attack * (0.8 + rand.Float64()*0.4)
+		cfg.Decay = cfg.Decay * (0.8 + rand.Float64()*0.4)
+		cfg.Sustain = cfg.Sustain * (0.8 + rand.Float64()*0.4)
+		cfg.Release = cfg.Release * (0.8 + rand.Float64()*0.4)
+		cfg.Drive = cfg.Drive * (0.8 + rand.Float64()*0.4)
+		cfg.FilterCutoff = cfg.FilterCutoff * (0.8 + rand.Float64()*0.4)
+		cfg.Sweep = cfg.Sweep * (0.8 + rand.Float64()*0.4)
+		cfg.PitchDecay = cfg.PitchDecay * (0.8 + rand.Float64()*0.4)
+
+		// Mutate the waveform and noise amounts
+		if rand.Float64() < mutationFactor {
+			cfg.WaveformType = rand.Intn(7) // Mutate to any waveform type
+		}
+		if rand.Float64() < mutationFactor {
+			cfg.NoiseAmount = cfg.NoiseAmount * (0.8 + rand.Float64()*0.4)
+		}
+	}
 }
 
 // Function to create sliders and dropdown for viewing and editing the selected pad's settings
@@ -381,9 +388,8 @@ func createSlidersForSelectedPad() g.Widget {
 				mutateAllPads(pads[activePadIndex])
 			}),
 			g.Button("Save").OnClick(func() {
-				// Save the active pad's settings
-				fileName := fmt.Sprintf("kick%d.wav", activePadIndex+1)
-				_, err := pads[activePadIndex].SaveTo(fileName)
+				// Save the active pad's settings to a .wav file
+				fileName, err := pads[activePadIndex].SaveTo(".")
 				if err != nil {
 					statusMessage = fmt.Sprintf("Error: Failed to save kick to %s", fileName)
 				} else {
