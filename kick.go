@@ -349,3 +349,16 @@ func (cfg *Config) Color() color.RGBA {
 	b := hashBytes[2]
 	return color.RGBA{R: r, G: g, B: b, A: 255}
 }
+
+// GenerateKickInMemory generates the kick waveform and returns it as a slice of integers.
+func (cfg *Config) GenerateKickInMemory() ([]int, error) {
+	samples := cfg.generateMultiOscillatorSamples()
+	applySaturator(samples, cfg.SaturatorAmount)
+	applyMultiBandFiltering(samples, cfg.FilterBands, cfg.SampleRate)
+
+	if cfg.NoiseType != NoiseNone {
+		mixNoise(samples, cfg)
+	}
+
+	return samples, nil
+}
