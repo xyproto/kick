@@ -9,10 +9,10 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/exec"
 
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
-	"github.com/hajimehoshi/oto"
 )
 
 const (
@@ -57,8 +57,10 @@ type Config struct {
 	BitDepth         int
 }
 
-var pinkNoiseAccumulator float64
-var brownNoiseAccumulator float64
+var (
+	brownNoiseAccumulator float64
+	pinkNoiseAccumulator  float64
+)
 
 func NewConfig(startFreq, endFreq float64, sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
 	if sampleRate <= 0 || duration <= 0 {
@@ -98,66 +100,49 @@ func CopyConfig(cfg *Config) *Config {
 	return &newCfg
 }
 
-// PlayWav plays a WAV file using a Go audio package
+// PlayWav plays a WAV file using mpv or ffmpeg
 func PlayWav(filePath string) error {
-	// Open the WAV file
-	file, err := os.Open(filePath)
+	cmd := exec.Command("mpv", filePath)
+	fmt.Printf("Running command: %v\n", cmd.Args)
+	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("Error opening WAV file: %v", err)
+		// Fallback to ffmpeg if mpv is not available
+		cmd = exec.Command("ffmpeg", "-i", filePath, "-f", "null", "-")
+		fmt.Printf("Running command: %v\n", cmd.Args)
+		err = cmd.Start()
+		if err != nil {
+			return fmt.Errorf("Error playing sound with both mpv and ffmpeg: %v", err)
+		}
 	}
-	defer file.Close()
-
-	// Decode the WAV file
-	decoder := wav.NewDecoder(file)
-	buffer, err := decoder.FullPCMBuffer()
-	if err != nil {
-		return fmt.Errorf("Error decoding WAV file: %v", err)
-	}
-
-	// Convert the sample rate and number of channels to int
-	sampleRate := int(decoder.SampleRate)
-	numChannels := int(decoder.NumChans)
-
-	// Initialize audio player using oto
-	context, err := oto.NewContext(sampleRate, numChannels, 2, 4096)
-	if err != nil {
-		return fmt.Errorf("Error initializing audio context: %v", err)
-	}
-	player := context.NewPlayer()
-	defer player.Close()
-
-	// Convert buffer data to []byte and play it
-	audioData := make([]byte, len(buffer.Data)*2) // 16-bit audio
-	for i, sample := range buffer.Data {
-		audioData[i*2] = byte(sample & 0xFF)
-		audioData[i*2+1] = byte((sample >> 8) & 0xFF)
-	}
-
-	player.Write(audioData)
-	player.Close()
+	cmd.Wait()
 	return nil
 }
 
-// PlayWaveform plays a waveform slice directly using oto
-func PlayWaveform(wave []int) error {
-	// Initialize audio player using oto
-	context, err := oto.NewContext(44100, 1, 2, 4096)
+// PlayWaveform writes the waveform to a temporary .wav file and plays it using mpv or ffmpeg
+func PlayWaveform(wave []int, sampleRate int) error {
+	// Create a temporary file
+	file, err := os.CreateTemp("", "waveform_*.wav")
 	if err != nil {
-		return fmt.Errorf("Error initializing audio context: %v", err)
+		return fmt.Errorf("Error creating temporary file: %v", err)
 	}
-	player := context.NewPlayer()
-	defer player.Close()
+	defer os.Remove(file.Name())
+	defer file.Close()
 
-	// Convert waveform data to []byte and play it
-	audioData := make([]byte, len(wave)*2) // 16-bit audio
-	for i, sample := range wave {
-		audioData[i*2] = byte(sample & 0xFF)
-		audioData[i*2+1] = byte((sample >> 8) & 0xFF)
+	// Write the waveform as a .wav file
+	buffer := &audio.IntBuffer{
+		Data:           wave,
+		Format:         &audio.Format{SampleRate: sampleRate, NumChannels: 1},
+		SourceBitDepth: 16,
 	}
 
-	player.Write(audioData)
-	player.Close()
-	return nil
+	encoder := wav.NewEncoder(file, sampleRate, 16, 1, 1)
+	if err := encoder.Write(buffer); err != nil {
+		return fmt.Errorf("Error writing waveform to WAV file: %v", err)
+	}
+	encoder.Close()
+
+	// Play the WAV file
+	return PlayWav(file.Name())
 }
 
 // SaveTo saves the generated kick to a specified directory, avoiding filename collisions
@@ -187,31 +172,19 @@ func (cfg *Config) SaveTo(directory string) (string, error) {
 	return fileName, nil
 }
 
-// GenerateKickTemp generates a kick and writes it to a temporary file
-func (cfg *Config) GenerateKickTemp() (string, error) {
-	file, err := os.CreateTemp("", "kick_*.wav")
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	cfg.Output = file
-
-	if err := cfg.GenerateKick(); err != nil {
-		return "", err
-	}
-
-	return file.Name(), nil
-}
-
-// Play generates a kick and plays it, removing the temporary file afterward
+// Play generates a kick and plays it directly using mpv or ffmpeg
 func (cfg *Config) Play() error {
-	filePath, err := cfg.GenerateKickTemp()
+	// Generate the kick waveform in memory
+	waveform, err := cfg.GenerateKickInMemory()
 	if err != nil {
 		return err
 	}
-	defer os.Remove(filePath)
-	PlayWav(filePath)
+
+	// Play the generated waveform directly
+	err = PlayWaveform(waveform, cfg.SampleRate)
+	if err != nil {
+		return fmt.Errorf("Error playing generated waveform: %v", err)
+	}
 	return nil
 }
 
@@ -283,32 +256,6 @@ func (cfg *Config) generateMultiOscillatorSamples() []int {
 	return samples
 }
 
-func applySaturator(samples []int, amount float64) {
-	for i := range samples {
-		sample := float64(samples[i]) / float64(1<<(16-1))
-		sample = math.Tanh(sample * (1.0 + amount))
-		samples[i] = int(sample * float64(1<<15))
-	}
-}
-
-func applyMultiBandFiltering(samples []int, bands []float64, sampleRate int) {
-	numSamples := len(samples)
-	for i := 0; i < numSamples; i++ {
-		t := float64(i) / float64(sampleRate)
-		frequency := 440.0 * math.Pow(2.0, t)
-
-		if frequency < bands[0] {
-			samples[i] = int(float64(samples[i]) * 0.9)
-		} else if frequency < bands[1] {
-			samples[i] = int(float64(samples[i]) * 0.8)
-		} else if frequency < bands[2] {
-			samples[i] = int(float64(samples[i]) * 0.7)
-		} else {
-			samples[i] = int(float64(samples[i]) * 0.6)
-		}
-	}
-}
-
 func generatePitchModulation(startFreq, endFreq float64, sampleRate int, duration float64) []float64 {
 	numSamples := int(float64(sampleRate) * duration)
 	pitchMod := make([]float64, numSamples)
@@ -334,29 +281,6 @@ func generateBrownNoise(i int) float64 {
 		brownNoiseAccumulator = -1
 	}
 	return brownNoiseAccumulator
-}
-
-func applyDrive(sample, driveAmount float64) float64 {
-	if driveAmount > 0 {
-		return sample * (1 + driveAmount) / (1 + driveAmount*math.Abs(sample))
-	}
-	return sample
-}
-
-func applyEnvelope(t, attack, decay, sustain, release, duration float64) float64 {
-	if t < attack {
-		return t / attack
-	}
-	if t < attack+decay {
-		return 1.0 - ((t - attack) / decay * (1.0 - sustain))
-	}
-	if t < duration-release {
-		return sustain
-	}
-	if t < duration {
-		return sustain * (1.0 - (t-(duration-release))/release)
-	}
-	return 0.0
 }
 
 func mixNoise(samples []int, cfg *Config) {

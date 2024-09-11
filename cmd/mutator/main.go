@@ -5,9 +5,11 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	g "github.com/AllenDang/giu"
+	"github.com/go-audio/wav"
 	"github.com/xyproto/kick"
 )
 
@@ -34,6 +36,7 @@ var waveformSelectedIndex int32
 
 // Load a .wav file and store the waveform for comparison
 func loadWavFile() error {
+	// Ensure the .wav file is loaded from the current working directory
 	workingDir, err := os.Getwd()
 	if err != nil {
 		statusMessage = "Error: Could not get working directory"
@@ -41,17 +44,26 @@ func loadWavFile() error {
 	}
 
 	filePath := filepath.Join(workingDir, wavFilePath)
-	err = kick.PlayWav(filePath)
+	file, err := os.Open(filePath)
 	if err != nil {
 		statusMessage = fmt.Sprintf("Error: Failed to open .wav file %s", filePath)
 		return err
 	}
+	defer file.Close()
 
+	decoder := wav.NewDecoder(file)
+	buffer, err := decoder.FullPCMBuffer()
+	if err != nil {
+		statusMessage = fmt.Sprintf("Error: Failed to decode .wav file %s", filePath)
+		return err
+	}
+
+	loadedWaveform = buffer.Data
 	statusMessage = fmt.Sprintf("Loaded .wav file: %s", filePath)
 	return nil
 }
 
-// Play the loaded .wav file using the kick.PlayWav function
+// Play the loaded .wav file using a command-line player
 func playWavFile() error {
 	workingDir, err := os.Getwd()
 	if err != nil {
@@ -60,7 +72,8 @@ func playWavFile() error {
 	}
 
 	filePath := filepath.Join(workingDir, wavFilePath)
-	err = kick.PlayWav(filePath)
+	cmd := exec.Command("mpv", filePath)
+	err = cmd.Start()
 	if err != nil {
 		statusMessage = fmt.Sprintf("Error: Failed to play .wav file %s", filePath)
 		return err
@@ -87,7 +100,7 @@ func compareWaveforms(waveform1, waveform2 []int) float64 {
 
 // Function to mutate all pads
 func mutateAllPads(base *kick.Config) {
-	mutationFactor := 0.2
+	mutationFactor := 0.2 // Increase mutation rate for the "Mutate all" action
 	mutate := func(value float64) float64 {
 		return value + (rand.Float64()-0.5)*mutationFactor*value
 	}
@@ -103,6 +116,7 @@ func mutateAllPads(base *kick.Config) {
 		pads[i].Sweep = mutate(base.Sweep)
 		pads[i].PitchDecay = mutate(base.PitchDecay)
 
+		// Mutate waveform in 20% of the cases
 		if rand.Float64() < 0.2 {
 			pads[i].WaveformType = rand.Intn(7)
 		}
@@ -112,6 +126,8 @@ func mutateAllPads(base *kick.Config) {
 // Function to mutate a single pad and update the UI with the mutated settings
 func mutateConfigAndSetActive(cfg *kick.Config, padIndex int) {
 	mutationFactor := 0.1
+
+	// Mutate the configuration
 	if rand.Float64() < mutationFactor {
 		cfg.Attack = cfg.Attack * (0.8 + rand.Float64()*0.4)
 		cfg.Decay = cfg.Decay * (0.8 + rand.Float64()*0.4)
@@ -122,16 +138,20 @@ func mutateConfigAndSetActive(cfg *kick.Config, padIndex int) {
 		cfg.Sweep = cfg.Sweep * (0.8 + rand.Float64()*0.4)
 		cfg.PitchDecay = cfg.PitchDecay * (0.8 + rand.Float64()*0.4)
 
+		// Mutate the waveform and noise amounts
 		if rand.Float64() < mutationFactor {
-			cfg.WaveformType = rand.Intn(7)
+			cfg.WaveformType = rand.Intn(7) // Mutate to any waveform type
 		}
 		if rand.Float64() < mutationFactor {
 			cfg.NoiseAmount = cfg.NoiseAmount * (0.8 + rand.Float64()*0.4)
 		}
 	}
 
+	// Set the mutated pad as active
 	activePadIndex = padIndex
-	g.Update()
+
+	// Update the UI with the mutated settings
+	g.Update() // Ensure the sliders and settings reflect the mutation
 }
 
 // Function to optimize the settings using a genetic algorithm without writing to disk
@@ -141,6 +161,7 @@ func optimizeSettings() {
 		return
 	}
 
+	// Display initial status message before starting the training
 	statusMessage = "Training started..."
 	g.Update()
 
@@ -165,18 +186,21 @@ func optimizeSettings() {
 		improved := false
 
 		for _, individual := range population {
+			// Generate the kick in memory
 			generatedWaveform, err := individual.GenerateKickInMemory()
 			if err != nil {
 				statusMessage = "Error: Failed to generate kick."
 				continue
 			}
 
+			// Compare the generated waveform with the target waveform
 			fitness := compareWaveforms(generatedWaveform, loadedWaveform)
 
+			// Update best config if the fitness is better
 			if fitness < bestFitness {
 				bestFitness = fitness
 				bestConfig = kick.CopyConfig(individual)
-				pads[activePadIndex] = bestConfig
+				pads[activePadIndex] = bestConfig // Save the best result to the active pad
 				improved = true
 
 				if bestFitness < 1e-3 {
@@ -203,11 +227,12 @@ func optimizeSettings() {
 		}
 
 		statusMessage = fmt.Sprintf("Generation %d: Best fitness = %f", generation, bestFitness)
-		g.Update()
+		g.Update() // Update UI with the new generation status
 	}
 
+	// After training, save the best result to the active pad and update the sliders
 	pads[activePadIndex] = bestConfig
-	g.Update()
+	g.Update() // Update the sliders with the best result
 }
 
 // Conditionally generate the "Find kick similar to WAV" and "Stop training" buttons
@@ -236,10 +261,11 @@ func generateTrainingButtons() g.Widget {
 				if err != nil {
 					statusMessage = "Error: Failed to play WAV"
 				}
-				g.Update()
+				g.Update() // Update status message for WAV playback
 			}),
 		)
 	}
+	// Return a dummy widget if no button should be displayed
 	return g.Dummy(0, 0)
 }
 
@@ -248,20 +274,25 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 	return g.Style().SetColor(g.StyleColorButton, cfg.Color()).To(
 		g.Column(
 			g.Button(padLabel).Size(buttonSize, buttonSize).OnClick(func() {
+				// Clear the status message when a pad is clicked
 				statusMessage = ""
+				// Set the clicked pad as active
 				activePadIndex = padIndex
+				// Then generate and play the sample
 				go func() {
-					err := kick.PlayWaveform(pads[activePadIndex].GenerateKickInMemory())
+					err := pads[activePadIndex].Play()
 					if err != nil {
 						statusMessage = "Error: Failed to play kick."
 					}
 				}()
 			}),
 			g.Button("Mutate").OnClick(func() {
+				// Mutate the selected pad and display the mutated settings in the sliders
 				mutateConfigAndSetActive(pads[padIndex], padIndex)
-				g.Update()
+				g.Update() // Update the sliders with the mutated settings
 			}),
 			g.Button("Save").OnClick(func() {
+				// Save the active pad's settings
 				fileName := fmt.Sprintf("kick%d.wav", padIndex+1)
 				_, err := pads[activePadIndex].SaveTo(fileName)
 				if err != nil {
@@ -269,7 +300,7 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 				} else {
 					statusMessage = fmt.Sprintf("Kick saved to %s", fileName)
 				}
-				g.Update()
+				g.Update() // Update the status message
 			}),
 		),
 	)
@@ -338,17 +369,19 @@ func createSlidersForSelectedPad() g.Widget {
 		g.Row(
 			// Buttons under the sliders: Play, Mutate all, Save
 			g.Button("Play").OnClick(func() {
+				// Clear the status message when "Play" is clicked
 				statusMessage = ""
-				err := kick.PlayWaveform(pads[activePadIndex].GenerateKickInMemory())
+				err := pads[activePadIndex].Play()
 				if err != nil {
 					statusMessage = "Error: Failed to play kick."
 				}
-				g.Update()
+				g.Update() // Update the status message
 			}),
 			g.Button("Mutate all").OnClick(func() {
 				mutateAllPads(pads[activePadIndex])
 			}),
 			g.Button("Save").OnClick(func() {
+				// Save the active pad's settings
 				fileName := fmt.Sprintf("kick%d.wav", activePadIndex+1)
 				_, err := pads[activePadIndex].SaveTo(fileName)
 				if err != nil {
@@ -356,7 +389,7 @@ func createSlidersForSelectedPad() g.Widget {
 				} else {
 					statusMessage = fmt.Sprintf("Kick saved to %s", fileName)
 				}
-				g.Update()
+				g.Update() // Update the status message
 			}),
 		),
 	)
