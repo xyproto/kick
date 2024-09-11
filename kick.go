@@ -9,10 +9,10 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"os/exec"
 
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
+	"github.com/hajimehoshi/oto"
 )
 
 const (
@@ -98,22 +98,66 @@ func CopyConfig(cfg *Config) *Config {
 	return &newCfg
 }
 
-// PlayWav plays a WAV file using mpv or ffmpeg
-func PlayWav(filePath string) {
-	cmd := exec.Command("mpv", filePath)
-	fmt.Printf("Running command: %v\n", cmd.Args)
-	err := cmd.Start()
+// PlayWav plays a WAV file using a Go audio package
+func PlayWav(filePath string) error {
+	// Open the WAV file
+	file, err := os.Open(filePath)
 	if err != nil {
-		// Fallback to ffmpeg if mpv is not available
-		cmd = exec.Command("ffmpeg", "-i", filePath, "-f", "null", "-")
-		fmt.Printf("Running command: %v\n", cmd.Args)
-		err = cmd.Start()
-		if err != nil {
-			fmt.Println("Error playing sound with both mpv and ffmpeg:", err)
-			return
-		}
+		return fmt.Errorf("Error opening WAV file: %v", err)
 	}
-	cmd.Wait()
+	defer file.Close()
+
+	// Decode the WAV file
+	decoder := wav.NewDecoder(file)
+	buffer, err := decoder.FullPCMBuffer()
+	if err != nil {
+		return fmt.Errorf("Error decoding WAV file: %v", err)
+	}
+
+	// Convert the sample rate and number of channels to int
+	sampleRate := int(decoder.SampleRate)
+	numChannels := int(decoder.NumChans)
+
+	// Initialize audio player using oto
+	context, err := oto.NewContext(sampleRate, numChannels, 2, 4096)
+	if err != nil {
+		return fmt.Errorf("Error initializing audio context: %v", err)
+	}
+	player := context.NewPlayer()
+	defer player.Close()
+
+	// Convert buffer data to []byte and play it
+	audioData := make([]byte, len(buffer.Data)*2) // 16-bit audio
+	for i, sample := range buffer.Data {
+		audioData[i*2] = byte(sample & 0xFF)
+		audioData[i*2+1] = byte((sample >> 8) & 0xFF)
+	}
+
+	player.Write(audioData)
+	player.Close()
+	return nil
+}
+
+// PlayWaveform plays a waveform slice directly using oto
+func PlayWaveform(wave []int) error {
+	// Initialize audio player using oto
+	context, err := oto.NewContext(44100, 1, 2, 4096)
+	if err != nil {
+		return fmt.Errorf("Error initializing audio context: %v", err)
+	}
+	player := context.NewPlayer()
+	defer player.Close()
+
+	// Convert waveform data to []byte and play it
+	audioData := make([]byte, len(wave)*2) // 16-bit audio
+	for i, sample := range wave {
+		audioData[i*2] = byte(sample & 0xFF)
+		audioData[i*2+1] = byte((sample >> 8) & 0xFF)
+	}
+
+	player.Write(audioData)
+	player.Close()
+	return nil
 }
 
 // SaveTo saves the generated kick to a specified directory, avoiding filename collisions
