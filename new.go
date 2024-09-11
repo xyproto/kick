@@ -2,7 +2,27 @@ package kick
 
 import (
 	"io"
+	"math/rand"
 )
+
+// Generate random kick settings
+func NewRandom() *Config {
+	cfg, _ := NewConfig(55.0, 30.0, 96000, 1.0, 16, nil)
+	cfg.Attack = rand.Float64() * 0.02
+	cfg.Decay = 0.2 + rand.Float64()*0.8
+	cfg.Sustain = rand.Float64() * 0.5
+	cfg.Release = 0.2 + rand.Float64()*0.5
+	cfg.Drive = rand.Float64()
+	cfg.FilterCutoff = 2000 + rand.Float64()*6000
+	cfg.Sweep = rand.Float64() * 1.5
+	cfg.PitchDecay = rand.Float64() * 1.5
+	if rand.Float64() < 0.1 {
+		cfg.WaveformType = rand.Intn(7)
+	} else {
+		cfg.WaveformType = rand.Intn(2)
+	}
+	return cfg
+}
 
 // NewExperimental with more extreme parameters for a truly experimental sound
 func NewExperimental(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {

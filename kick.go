@@ -1,7 +1,10 @@
 package kick
 
 import (
+	"crypto/sha1"
 	"errors"
+	"fmt"
+	"image/color"
 	"io"
 	"math"
 	"math/rand"
@@ -84,6 +87,7 @@ func NewConfig(startFreq, endFreq float64, sampleRate int, duration float64, bit
 		FilterBands:      []float64{200.0, 1000.0, 3000.0},
 		BitDepth:         bitDepth,
 	}, nil
+
 }
 
 func (cfg *Config) GenerateKick() error {
@@ -250,4 +254,17 @@ func mixNoise(samples []int, cfg *Config) {
 			samples[i] = -32767
 		}
 	}
+}
+
+// Color returns a color that very approximately represents the current kick config
+func (cfg *Config) Color() color.RGBA {
+	hasher := sha1.New()
+	hasher.Write([]byte(fmt.Sprintf("%d%f%f%f%f%f%f%f%f", cfg.WaveformType, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.Drive, cfg.FilterCutoff, cfg.Sweep, cfg.PitchDecay)))
+	hashBytes := hasher.Sum(nil)
+
+	// Convert the first few bytes of the hash into an RGB color
+	r := hashBytes[0]
+	g := hashBytes[1]
+	b := hashBytes[2]
+	return color.RGBA{R: r, G: g, B: b, A: 255}
 }
