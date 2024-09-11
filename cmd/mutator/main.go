@@ -455,6 +455,6 @@ func main() {
 	activePadIndex = 0
 
 	// Adjust the window size to fit the grid, buttons, and sliders better
-	wnd := g.NewMasterWindow("Kick Drum Generator", 860, 740, g.MasterWindowFlagsNotResizable)
+	wnd := g.NewMasterWindow("Kick Drum Generator", 780, 660, g.MasterWindowFlagsNotResizable)
 	wnd.Run(loop)
 }
