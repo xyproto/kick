@@ -29,7 +29,6 @@ import (
 
 type GLFWWindowFlags int
 
-// Window flags
 const (
 	GLFWWindowFlagsNone        = GLFWWindowFlags(C.GLFWWindowNone)
 	GLFWWindowFlagsResizable   = GLFWWindowFlags(C.GLFWWindowResizable)
@@ -41,21 +40,6 @@ const (
 	GLFWWindowFlagsFocused     = GLFWWindowFlags(C.GLFWWindowFocused)
 	GLFWWindowFlagsIconified   = GLFWWindowFlags(C.GLFWWindowIconified)
 	GLFWWindowFlagsAutoIconify = GLFWWindowFlags(C.GLFWWindowAutoIconify)
-)
-
-// SwapInterval values
-const (
-	GLFWSwapIntervalImmediate = GLFWWindowFlags(0)
-	GLFWSwapIntervalVsync     = GLFWWindowFlags(1)
-)
-
-// Input modes
-const (
-	GLFWInputModeCursor         = GLFWWindowFlags(C.GLFW_CURSOR)
-	GLFWInputModeCursorNormal   = GLFWWindowFlags(C.GLFW_CURSOR_NORMAL)
-	GLFWInputModeCursorHidden   = GLFWWindowFlags(C.GLFW_CURSOR_HIDDEN)
-	GLFWInputModeCursorDisabled = GLFWWindowFlags(C.GLFW_CURSOR_DISABLED)
-	GLFWInputModeRawMouseMotion = GLFWWindowFlags(C.GLFW_RAW_MOUSE_MOTION)
 )
 
 type GLFWKey int
@@ -297,7 +281,7 @@ func (b *GLFWBackend) SetWindowSize(width, height int) {
 	C.igGLFWWindow_SetSize(b.handle(), C.int(width), C.int(height))
 }
 
-func (b *GLFWBackend) DisplaySize() (width int32, height int32) {
+func (b GLFWBackend) DisplaySize() (width int32, height int32) {
 	widthArg, widthFin := WrapNumberPtr[C.int, int32](&width)
 	defer widthFin()
 
@@ -309,7 +293,7 @@ func (b *GLFWBackend) DisplaySize() (width int32, height int32) {
 	return
 }
 
-func (b *GLFWBackend) ContentScale() (width, height float32) {
+func (b GLFWBackend) ContentScale() (width, height float32) {
 	widthArg, widthFin := WrapNumberPtr[C.float, float32](&width)
 	defer widthFin()
 
@@ -335,7 +319,7 @@ func (b *GLFWBackend) SetWindowSizeLimits(minWidth, minHeight, maxWidth, maxHeig
 	C.igGLFWWindow_SetSizeLimits(b.handle(), C.int(minWidth), C.int(minHeight), C.int(maxWidth), C.int(maxHeight))
 }
 
-func (b *GLFWBackend) SetShouldClose(value bool) {
+func (b GLFWBackend) SetShouldClose(value bool) {
 	C.igGLFWWindow_SetShouldClose(b.handle(), C.int(CastBool(value)))
 }
 
@@ -464,17 +448,4 @@ func (b *GLFWBackend) SetSizeChangeCallback(cbfun SizeChangeCallback) {
 
 func (b *GLFWBackend) sizeCallback() SizeChangeCallback {
 	return b.sizeCb
-}
-
-func (b *GLFWBackend) SetSwapInterval(interval GLFWWindowFlags) error {
-	C.glfwSwapInterval(C.int(interval))
-	return nil
-}
-
-func (b *GLFWBackend) SetCursorPos(x, y float64) {
-	C.glfwSetCursorPos(b.handle(), C.double(x), C.double(y))
-}
-
-func (b *GLFWBackend) SetInputMode(mode GLFWWindowFlags, value GLFWWindowFlags) {
-	C.glfwSetInputMode(b.handle(), C.int(mode), C.int(value))
 }

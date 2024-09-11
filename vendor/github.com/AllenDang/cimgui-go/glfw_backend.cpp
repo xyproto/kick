@@ -198,17 +198,19 @@ void igGLFWRunLoop(GLFWwindow *window, VoidCallback loop, VoidCallback beforeRen
 
     glfw_render(window, loop);
 
-    double frameTime = 1.0 / glfw_target_fps;
-    double targetTime = lasttime + frameTime;
+    while (glfwGetTime() < lasttime + 1.0 / glfw_target_fps) {
+      // do nothing here
+    }
+    lasttime += 1.0 / glfw_target_fps;
 
-    double waitTime = targetTime - glfwGetTime();
-    if (waitTime > 0.0) {
-      glfwWaitEventsTimeout(waitTime);
+    if (extra_frame_count > 0) {
+      extra_frame_count--;
     } else {
-      glfwPollEvents();
+      glfwWaitEvents();
+      extra_frame_count = MAX_EXTRA_FRAME_COUNT;
     }
 
-    lasttime += frameTime;
+    glfwPollEvents();
 
     if (afterRender != NULL) {
       afterRender();
@@ -294,7 +296,6 @@ void igGLFWWindow_SetIcon(GLFWwindow *window, int count, CImage *images) {
     }
 
     glfwSetWindowIcon(window, count, glfwImages);
-    free(glfwImages);
 }
 
 void iggImplGlfw_KeyCallback(GLFWwindow* w, int k,int s,int a,int m) { ImGui_ImplGlfw_KeyCallback(w,k,s,a,m); }

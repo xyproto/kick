@@ -143,9 +143,6 @@ type Backend[BackendFlagsT ~int] interface {
 	// ATTENTION: This method is able to set only one flag per call.
 	SetWindowFlags(flag BackendFlagsT, value int)
 	SetIcons(icons ...image.Image)
-	SetSwapInterval(interval BackendFlagsT) error
-	SetCursorPos(x, y float64)
-	SetInputMode(mode BackendFlagsT, value BackendFlagsT)
 
 	CreateWindow(title string, width, height int)
 

@@ -21,7 +21,6 @@ package imgui
 import "C"
 
 import (
-	"errors"
 	"image"
 	"image/draw"
 	"unsafe"
@@ -29,52 +28,20 @@ import (
 
 type SDLWindowFlags int
 
-// SDL bool values
+/*
 const (
-	SDLTrue  = SDLWindowFlags(1)
-	SDLFalse = SDLWindowFlags(0)
+	GLFWWindowFlagsNone        = GLFWWindowFlags(C.GLFWWindowNone)
+	GLFWWindowFlagsResizable   = GLFWWindowFlags(C.GLFWWindowResizable)
+	GLFWWindowFlagsMaximized   = GLFWWindowFlags(C.GLFWWindowMaximized)
+	GLFWWindowFlagsDecorated   = GLFWWindowFlags(C.GLFWWindowDecorated)
+	GLFWWindowFlagsTransparent = GLFWWindowFlags(C.GLFWWindowTransparentFramebuffer)
+	GLFWWindowFlagsVisible     = GLFWWindowFlags(C.GLFWWindowVisible)
+	GLFWWindowFlagsFloating    = GLFWWindowFlags(C.GLFWWindowFloating)
+	GLFWWindowFlagsFocused     = GLFWWindowFlags(C.GLFWWindowFocused)
+	GLFWWindowFlagsIconified   = GLFWWindowFlags(C.GLFWWindowIconified)
+	GLFWWindowFlagsAutoIconify = GLFWWindowFlags(C.GLFWWindowAutoIconify)
 )
-
-// Window flags
-const (
-	SDLWindowFlagsNone              = SDLWindowFlags(0) // Clear all flags
-	SDLWindowFlagsFullScreen        = SDLWindowFlags(C.SDL_WINDOW_FULLSCREEN)
-	SDLWindowFlagsOpengl            = SDLWindowFlags(C.SDL_WINDOW_OPENGL)
-	SDLWindowFlagsDecorated         = SDLWindowFlags(C.SDL_WINDOW_SHOWN)
-	SDLWindowFlagsTransparent       = SDLWindowFlags(C.SDL_WINDOW_HIDDEN)
-	SDLWindowFlagsVisible           = SDLWindowFlags(C.SDL_WINDOW_BORDERLESS)
-	SDLWindowFlagsResizable         = SDLWindowFlags(C.SDL_WINDOW_RESIZABLE)
-	SDLWindowFlagsMinimized         = SDLWindowFlags(C.SDL_WINDOW_MINIMIZED)
-	SDLWindowFlagsMaximized         = SDLWindowFlags(C.SDL_WINDOW_MAXIMIZED)
-	SDLWindowFlagsMouseGrabbed      = SDLWindowFlags(C.SDL_WINDOW_MOUSE_GRABBED)
-	SDLWindowFlagsInputFocus        = SDLWindowFlags(C.SDL_WINDOW_INPUT_FOCUS)
-	SDLWindowFlagsMouseFocus        = SDLWindowFlags(C.SDL_WINDOW_MOUSE_FOCUS)
-	SDLWindowFlagsFullscreenDesktop = SDLWindowFlags(C.SDL_WINDOW_FULLSCREEN_DESKTOP)
-	SDLWindowFlagsWindowForeign     = SDLWindowFlags(C.SDL_WINDOW_FOREIGN)
-	SDLWindowFlagsAllowHighDPI      = SDLWindowFlags(C.SDL_WINDOW_ALLOW_HIGHDPI)
-	SDLWindowFlagsMouseCapture      = SDLWindowFlags(C.SDL_WINDOW_MOUSE_CAPTURE)
-	SDLWindowFlagsAlwaysOnTop       = SDLWindowFlags(C.SDL_WINDOW_ALWAYS_ON_TOP)
-	SDLWindowFlagsSkipTaskbar       = SDLWindowFlags(C.SDL_WINDOW_SKIP_TASKBAR)
-	SDLWindowFlagsUtility           = SDLWindowFlags(C.SDL_WINDOW_UTILITY)
-	SDLWindowFlagsTooltip           = SDLWindowFlags(C.SDL_WINDOW_TOOLTIP)
-	SDLWindowFlagsPopupMenu         = SDLWindowFlags(C.SDL_WINDOW_POPUP_MENU)
-	SDLWindowFlagsKeyboardGrabbed   = SDLWindowFlags(C.SDL_WINDOW_KEYBOARD_GRABBED)
-	SDLWindowFlagsWindowVulkan      = SDLWindowFlags(C.SDL_WINDOW_VULKAN)
-	SDLWindowFlagsWindowMetal       = SDLWindowFlags(C.SDL_WINDOW_METAL)
-)
-
-// Swap interval flags
-const (
-	SDLSwapIntervalImmediate    = SDLWindowFlags(0)
-	SDLSwapIntervalVsync        = SDLWindowFlags(1)
-	SDLSwapIntervalAdaptiveSync = SDLWindowFlags(-1)
-)
-
-// Input mode flags
-const (
-	SDLInputModeRelativeMouse = SDLWindowFlags(iota)
-	SDLInputModeGrab
-)
+*/
 
 /*
 type GLFWKey int
@@ -231,16 +198,12 @@ type SDLBackend struct {
 	window               uintptr
 }
 
-func SDLGetError() string {
-	return C.GoString(C.SDL_GetError())
-}
-
 func NewSDLBackend() *SDLBackend {
 	b := &SDLBackend{}
 	// \returns 0 on success or a negative error code on failure; call
 	// SDL_GetError() for more information.
 	if C.igInitSDL() != 0 {
-		panic(SDLGetError())
+		panic("Failed to initialize SDL")
 	}
 
 	return b
@@ -422,10 +385,9 @@ func (b *SDLBackend) SetCloseCallback(cbfun WindowCloseCallback[SDLWindowFlags])
 
 // SetWindowHint applies to next CreateWindow call
 // so use it before CreateWindow call ;-)
-// default applied flags: SDLWindowFlagsOpengl | SDLWindowFlagsResizable | SDLWindowFlagsAllowHighDPI
-// set flag if value is 1, clear flag if value is 0
 func (b *SDLBackend) SetWindowFlags(flag SDLWindowFlags, value int) {
-	C.igSDLWindowHint(C.SDL_WindowFlags(flag), C.int(value))
+	// TODO: cache these flags and use in CreateWindow
+	// C.igSDLWindowHint(C.SDL_WindowFlags(flag), C.int(value))
 }
 
 // SetIcons sets icons for the window.
@@ -497,24 +459,4 @@ func (b *SDLBackend) SetSizeChangeCallback(cbfun SizeChangeCallback) {
 
 func (b *SDLBackend) sizeCallback() SizeChangeCallback {
 	return b.sizeCb
-}
-
-func (b *SDLBackend) SetSwapInterval(interval SDLWindowFlags) error {
-	if C.SDL_GL_SetSwapInterval(C.int(interval)) != 0 {
-		return errors.New(SDLGetError())
-	}
-	return nil
-}
-
-func (b *SDLBackend) SetCursorPos(x, y float64) {
-	C.SDL_WarpMouseInWindow(b.handle(), C.int(x), C.int(y))
-}
-
-func (b *SDLBackend) SetInputMode(mode SDLWindowFlags, value SDLWindowFlags) {
-	switch mode {
-	case SDLInputModeRelativeMouse:
-		C.SDL_SetRelativeMouseMode(C.SDL_bool(value))
-	case SDLInputModeGrab:
-		C.SDL_SetWindowGrab(b.handle(), C.SDL_bool(value))
-	}
 }

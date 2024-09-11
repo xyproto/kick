@@ -197,7 +197,8 @@ extern void igSDLWindow_SetSizeLimits(SDL_Window *window, int minWidth, int minH
 extern void igRefresh();
 extern ImTextureID igCreateTexture(unsigned char *pixels, int width, int height);
 extern void igDeleteTexture(ImTextureID id);
-extern void igSDLWindowHint(SDL_WindowFlags hint, int value);
+// TODO: I thnig SDL doesn't provide such a possibility
+//extern void igSDLWindowHint(SDL_WindowFlags hint, int value);
 
 //extern void dropCallback(int, char **);
 //extern void closeCallback(SDL_Window *window);
