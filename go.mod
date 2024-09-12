@@ -6,7 +6,7 @@ require (
 	github.com/AllenDang/giu v0.8.1
 	github.com/go-audio/audio v1.0.0
 	github.com/go-audio/wav v1.1.0
-	github.com/hajimehoshi/oto v1.0.1
+	github.com/gordonklaus/portaudio v0.0.0-20230709114228-aafa478834f5
 )
 
 require (
@@ -20,9 +20,7 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	golang.design/x/hotkey v0.4.1 // indirect
 	golang.design/x/mainthread v0.3.0 // indirect
-	golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8 // indirect
 	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	gopkg.in/eapache/queue.v1 v1.1.0 // indirect
 )
