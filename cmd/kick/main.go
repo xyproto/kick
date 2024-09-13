@@ -58,10 +58,14 @@ func main() {
 	// Set sample rate based on the quality flag
 	var sampleRate int
 	switch *quality {
+	case 44:
+		sampleRate = 44100
 	case 48:
 		sampleRate = 48000
 	case 96:
 		sampleRate = 96000
+	case 192:
+		sampleRate = 192000
 	default:
 		fmt.Println("Invalid sample rate. Choose 48 or 96 kHz.")
 		os.Exit(1)
@@ -76,7 +80,7 @@ func main() {
 	defer outFile.Close()
 
 	// Use the appropriate constructor based on the selected kick style
-	var cfg *kick.Config
+	var cfg *kick.Settings
 	switch {
 	case *kick808:
 		cfg, err = kick.New808(sampleRate, *length/1000.0, *bitDepth, outFile)
@@ -100,7 +104,7 @@ func main() {
 		cfg, err = kick.NewExperimental(sampleRate, *length/1000.0, *bitDepth, outFile)
 		fmt.Println("Generating experimental-style kick with unique texture.")
 	default:
-		cfg, err = kick.NewConfig(150.0, 40.0, sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = kick.NewSettings(150.0, 40.0, sampleRate, *length/1000.0, *bitDepth, outFile)
 		fmt.Println("Generating default kick with user-defined characteristics.")
 	}
 
@@ -123,6 +127,8 @@ func main() {
 	cfg.OscillatorLevels = parseCommaSeparatedFloats(*oscillatorLevels)
 	cfg.SaturatorAmount = *saturatorAmount
 	cfg.FilterBands = parseCommaSeparatedFloats(*filterBands)
+	cfg.FadeDuration = 0.01
+	cfg.SmoothFrequencyTransitions = true
 
 	// Set noise type
 	var noise int
