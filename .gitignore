@@ -6,5 +6,6 @@
 cmd/*/*.wav
 cmd/kick/kick
 cmd/mutator/mutator
-cmd/ui/ui
 include.txt
+kick
+mutator
