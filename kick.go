@@ -192,11 +192,18 @@ func (cfg *Config) Play() error {
 
 func (cfg *Config) GenerateKick() error {
 	samples := cfg.generateMultiOscillatorSamples()
+
 	applySaturator(samples, cfg.SaturatorAmount)
+
 	applyMultiBandFiltering(samples, cfg.FilterBands, cfg.SampleRate)
 
 	if cfg.NoiseType != NoiseNone {
 		mixNoise(samples, cfg)
+	}
+
+	// Apply fade in/out if FadeDuration is set
+	if cfg.FadeDuration > 0 {
+		applyFadeInOut(samples, cfg.SampleRate, cfg.FadeDuration)
 	}
 
 	buffer := &audio.IntBuffer{
@@ -209,6 +216,7 @@ func (cfg *Config) GenerateKick() error {
 	if err := encoder.Write(buffer); err != nil {
 		return err
 	}
+
 	return encoder.Close()
 }
 
@@ -223,8 +231,19 @@ func (cfg *Config) generateMultiOscillatorSamples() []int {
 		var totalSample float64
 
 		for oscIndex := 0; oscIndex < cfg.NumOscillators; oscIndex++ {
-			decayFactor := math.Pow(cfg.EndFreq/cfg.StartFreq, (t/cfg.Duration)*cfg.Sweep)
-			frequency := cfg.StartFreq * decayFactor * pitchMod[i]
+			var frequency float64
+			if cfg.SmoothFrequencyTransitions {
+				// Smoother frequency transition
+				decayFactor := math.Pow(cfg.EndFreq/cfg.StartFreq, (t/cfg.Duration)*cfg.Sweep)
+				frequency = cfg.StartFreq * decayFactor * pitchMod[i]
+			} else {
+				// Abrupt frequency transition
+				if t < cfg.Duration/2 {
+					frequency = cfg.StartFreq
+				} else {
+					frequency = cfg.EndFreq
+				}
+			}
 
 			var sample float64
 			switch cfg.WaveformType {
@@ -252,7 +271,7 @@ func (cfg *Config) generateMultiOscillatorSamples() []int {
 			totalSample += sample
 		}
 
-		samples[i] = int(totalSample * float64(int(1)<<(cfg.BitDepth-1)))
+		samples[i] = int(totalSample * float64(int(1)<<cfg.BitDepth-1))
 	}
 
 	return samples

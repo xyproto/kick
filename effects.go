@@ -50,3 +50,22 @@ func applyEnvelope(t, attack, decay, sustain, release, duration float64) float64
 	}
 	return 0.0
 }
+
+func applyFadeInOut(samples []int, sampleRate int, fadeDuration float64) {
+	fadeSamples := int(fadeDuration * float64(sampleRate))
+	if fadeSamples > len(samples)/2 {
+		fadeSamples = len(samples) / 2
+	}
+
+	// Apply fade-in
+	for i := 0; i < fadeSamples; i++ {
+		fadeFactor := float64(i) / float64(fadeSamples)
+		samples[i] = int(float64(samples[i]) * fadeFactor)
+	}
+
+	// Apply fade-out
+	for i := len(samples) - fadeSamples; i < len(samples); i++ {
+		fadeFactor := float64(len(samples)-i) / float64(fadeSamples)
+		samples[i] = int(float64(samples[i]) * fadeFactor)
+	}
+}
