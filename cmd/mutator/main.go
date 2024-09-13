@@ -23,7 +23,7 @@ const (
 // Global variables
 var (
 	activePadIndex  int
-	pads            [numPads]*kick.Config
+	pads            [numPads]*kick.Settings
 	loadedWaveform  []int                     // Loaded .wav file waveform data
 	trainingOngoing bool                      // Indicates whether the GA is running
 	wavFilePath     string    = "kick808.wav" // Default .wav file path
@@ -99,14 +99,14 @@ func compareWaveforms(waveform1, waveform2 []int) float64 {
 }
 
 // Function to mutate all pads
-func mutateAllPads(base *kick.Config) {
+func mutateAllPads(base *kick.Settings) {
 	mutationFactor := 0.2 // Increase mutation rate for the "Mutate all" action
 	mutate := func(value float64) float64 {
 		return value + (rand.Float64()-0.5)*mutationFactor*value
 	}
 
 	for i := 0; i < numPads; i++ {
-		pads[i] = kick.CopyConfig(base)
+		pads[i] = kick.CopySettings(base)
 		pads[i].Attack = mutate(base.Attack)
 		pads[i].Decay = mutate(base.Decay)
 		pads[i].Sustain = mutate(base.Sustain)
@@ -115,9 +115,10 @@ func mutateAllPads(base *kick.Config) {
 		pads[i].FilterCutoff = mutate(base.FilterCutoff)
 		pads[i].Sweep = mutate(base.Sweep)
 		pads[i].PitchDecay = mutate(base.PitchDecay)
+		pads[i].FadeDuration = mutate(base.FadeDuration)
 
-		// Mutate waveform in 20% of the cases
-		if rand.Float64() < 0.2 {
+		// Mutate waveform in 10% of the cases
+		if rand.Float64() < 0.1 {
 			pads[i].WaveformType = rand.Intn(7)
 		}
 	}
@@ -134,12 +135,12 @@ func optimizeSettings() {
 	statusMessage = "Training started..."
 	g.Update()
 
-	population := make([]*kick.Config, 100)
+	population := make([]*kick.Settings, 100)
 	for i := 0; i < len(population); i++ {
 		population[i] = kick.NewRandom()
 	}
 
-	bestConfig := pads[activePadIndex]
+	bestSettings := pads[activePadIndex]
 	bestFitness := math.Inf(1)
 	stagnationCount := 0
 
@@ -168,8 +169,8 @@ func optimizeSettings() {
 			// Update best config if the fitness is better
 			if fitness < bestFitness {
 				bestFitness = fitness
-				bestConfig = kick.CopyConfig(individual)
-				pads[activePadIndex] = bestConfig // Save the best result to the active pad
+				bestSettings = kick.CopySettings(individual)
+				pads[activePadIndex] = bestSettings // Save the best result to the active pad
 				improved = true
 
 				if bestFitness < 1e-3 {
@@ -192,7 +193,7 @@ func optimizeSettings() {
 		}
 
 		for i := 0; i < len(population); i++ {
-			mutateConfig(population[i])
+			mutateSettings(population[i])
 		}
 
 		statusMessage = fmt.Sprintf("Generation %d: Best fitness = %f", generation, bestFitness)
@@ -200,7 +201,7 @@ func optimizeSettings() {
 	}
 
 	// After training, save the best result to the active pad and update the sliders
-	pads[activePadIndex] = bestConfig
+	pads[activePadIndex] = bestSettings
 	g.Update() // Update the sliders with the best result
 }
 
@@ -246,8 +247,8 @@ func generateTrainingButtons() g.Widget {
 	return g.Dummy(0, 0)
 }
 
-// Function to create a widget for a Config struct, with the color based on the config
-func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
+// Function to create a widget for a Settings struct, with the color based on the config
+func createPadWidget(cfg *kick.Settings, padLabel string, padIndex int) g.Widget {
 	return g.Style().SetColor(g.StyleColorButton, cfg.Color()).To(
 		g.Column(
 			g.Button(padLabel).Size(buttonSize, buttonSize).OnClick(func() {
@@ -266,7 +267,7 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 			// Mutate button: Mutate the selected pad and update the sliders
 			g.Button("Mutate").OnClick(func() {
 				// Mutate the selected pad and update its settings
-				mutateConfig(pads[padIndex])
+				mutateSettings(pads[padIndex])
 				// Ensure the active pad is updated
 				activePadIndex = padIndex
 				// Trigger UI update to reflect mutated settings in sliders
@@ -288,9 +289,9 @@ func createPadWidget(cfg *kick.Config, padLabel string, padIndex int) g.Widget {
 }
 
 // Function to mutate a single config
-func mutateConfig(cfg *kick.Config) {
+func mutateSettings(cfg *kick.Settings) {
 
-	mutationFactor := 0.1
+	mutationFactor := 0.01
 
 	// Mutate the configuration
 	if rand.Float64() < mutationFactor {
