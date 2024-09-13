@@ -65,7 +65,7 @@ func NewLinnDrum(sampleRate int, duration float64, bitDepth int, output io.Write
 	cfg.FilterCutoff = 5000 // Balanced cutoff for clarity
 	cfg.Sweep = 0.6
 	cfg.PitchDecay = 0.4                  // Gentle pitch decay for depth
-	cfg.FadeDuration = 0.01               // 10ms fade in/out
+	cfg.FadeDuration = 0.02               // 20ms fade in/out for a punchy yet smooth sound
 	cfg.SmoothFrequencyTransitions = true // Enable smooth frequency transitions
 
 	return cfg, nil
@@ -86,7 +86,7 @@ func NewDeepHouse(sampleRate int, duration float64, bitDepth int, output io.Writ
 	cfg.FilterCutoff = 3500               // Low cutoff for deep, smooth bass
 	cfg.Sweep = 0.8                       // Gentle sweep to keep it subtle
 	cfg.PitchDecay = 0.6                  // Slight pitch decay for that deep house feel
-	cfg.FadeDuration = 0.01               // 10ms fade in/out
+	cfg.FadeDuration = 0.03               // 30ms fade in/out for a more gradual sound
 	cfg.SmoothFrequencyTransitions = true // Enable smooth frequency transitions
 
 	return cfg, nil
@@ -106,7 +106,7 @@ func New606(sampleRate int, duration float64, bitDepth int, output io.WriteSeeke
 	cfg.FilterCutoff = 5000
 	cfg.Sweep = 0.7
 	cfg.PitchDecay = 0.5
-	cfg.FadeDuration = 0.01               // 10ms fade in/out
+	cfg.FadeDuration = 0.015              // 15ms fade in/out for a balanced sound
 	cfg.SmoothFrequencyTransitions = true // Enable smooth frequency transitions
 
 	return cfg, nil
@@ -146,7 +146,7 @@ func New808(sampleRate int, duration float64, bitDepth int, output io.WriteSeeke
 	cfg.FilterCutoff = 4000
 	cfg.Sweep = 0.9
 	cfg.PitchDecay = 0.5
-	cfg.FadeDuration = 0.01               // 10ms fade in/out
+	cfg.FadeDuration = 0.02               // 20ms fade in/out for a fuller sound
 	cfg.SmoothFrequencyTransitions = true // Enable smooth frequency transitions
 
 	return cfg, nil
@@ -166,7 +166,7 @@ func New909(sampleRate int, duration float64, bitDepth int, output io.WriteSeeke
 	cfg.FilterCutoff = 8000
 	cfg.Sweep = 0.7
 	cfg.PitchDecay = 0.2
-	cfg.FadeDuration = 0.01               // 10ms fade in/out
+	cfg.FadeDuration = 0.015              // 15ms fade in/out to balance between smoothness and clarity
 	cfg.SmoothFrequencyTransitions = true // Enable smooth frequency transitions
 
 	return cfg, nil
