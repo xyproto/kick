@@ -33,28 +33,30 @@ const (
 )
 
 type Config struct {
-	StartFreq        float64
-	EndFreq          float64
-	SampleRate       int
-	Duration         float64
-	WaveformType     int
-	Attack           float64
-	Decay            float64
-	Sustain          float64
-	Release          float64
-	Drive            float64
-	FilterCutoff     float64
-	FilterResonance  float64
-	Sweep            float64
-	PitchDecay       float64
-	NoiseType        int
-	NoiseAmount      float64
-	Output           io.WriteSeeker
-	NumOscillators   int
-	OscillatorLevels []float64
-	SaturatorAmount  float64
-	FilterBands      []float64
-	BitDepth         int
+	StartFreq                  float64
+	EndFreq                    float64
+	SampleRate                 int
+	Duration                   float64
+	WaveformType               int
+	Attack                     float64
+	Decay                      float64
+	Sustain                    float64
+	Release                    float64
+	Drive                      float64
+	FilterCutoff               float64
+	FilterResonance            float64
+	Sweep                      float64
+	PitchDecay                 float64
+	NoiseType                  int
+	NoiseAmount                float64
+	Output                     io.WriteSeeker
+	NumOscillators             int
+	OscillatorLevels           []float64
+	SaturatorAmount            float64
+	FilterBands                []float64
+	BitDepth                   int
+	FadeDuration               float64
+	SmoothFrequencyTransitions bool
 }
 
 var (
