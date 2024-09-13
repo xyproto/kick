@@ -32,7 +32,7 @@ const (
 	NoiseBrown
 )
 
-type Config struct {
+type Settings struct {
 	StartFreq                  float64
 	EndFreq                    float64
 	SampleRate                 int
@@ -64,12 +64,12 @@ var (
 	pinkNoiseAccumulator  float64
 )
 
-func NewConfig(startFreq, endFreq float64, sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
+func NewSettings(startFreq, endFreq float64, sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
 	if sampleRate <= 0 || duration <= 0 {
 		return nil, errors.New("invalid sample rate or duration")
 	}
 
-	return &Config{
+	return &Settings{
 		StartFreq:        startFreq,
 		EndFreq:          endFreq,
 		SampleRate:       sampleRate,
@@ -95,8 +95,8 @@ func NewConfig(startFreq, endFreq float64, sampleRate int, duration float64, bit
 	}, nil
 }
 
-// CopyConfig creates a deep copy of a Config struct
-func CopyConfig(cfg *Config) *Config {
+// CopySettings creates a deep copy of a Settings struct
+func CopySettings(cfg *Settings) *Settings {
 	newCfg := *cfg
 	newCfg.OscillatorLevels = append([]float64(nil), cfg.OscillatorLevels...) // Deep copy the slice
 	return &newCfg
@@ -148,7 +148,7 @@ func PlayWaveform(wave []int, sampleRate int) error {
 }
 
 // SaveTo saves the generated kick to a specified directory, avoiding filename collisions
-func (cfg *Config) SaveTo(directory string) (string, error) {
+func (cfg *Settings) SaveTo(directory string) (string, error) {
 	n := 1
 	var fileName string
 	for {
@@ -175,7 +175,7 @@ func (cfg *Config) SaveTo(directory string) (string, error) {
 }
 
 // Play generates a kick and plays it directly using mpv or ffmpeg
-func (cfg *Config) Play() error {
+func (cfg *Settings) Play() error {
 	// Generate the kick waveform in memory
 	waveform, err := cfg.GenerateKickInMemory()
 	if err != nil {
@@ -190,7 +190,7 @@ func (cfg *Config) Play() error {
 	return nil
 }
 
-func (cfg *Config) GenerateKick() error {
+func (cfg *Settings) GenerateKick() error {
 	samples := cfg.generateMultiOscillatorSamples()
 
 	applySaturator(samples, cfg.SaturatorAmount)
@@ -220,7 +220,7 @@ func (cfg *Config) GenerateKick() error {
 	return encoder.Close()
 }
 
-func (cfg *Config) generateMultiOscillatorSamples() []int {
+func (cfg *Settings) generateMultiOscillatorSamples() []int {
 	numSamples := int(float64(cfg.SampleRate) * cfg.Duration)
 	samples := make([]int, numSamples)
 
@@ -304,7 +304,7 @@ func generateBrownNoise(i int) float64 {
 	return brownNoiseAccumulator
 }
 
-func mixNoise(samples []int, cfg *Config) {
+func mixNoise(samples []int, cfg *Settings) {
 	for i := range samples {
 		var noiseSample float64
 		switch cfg.NoiseType {
@@ -327,7 +327,7 @@ func mixNoise(samples []int, cfg *Config) {
 }
 
 // Color returns a color that very approximately represents the current kick config
-func (cfg *Config) Color() color.RGBA {
+func (cfg *Settings) Color() color.RGBA {
 	hasher := sha1.New()
 	hasher.Write([]byte(fmt.Sprintf("%d%f%f%f%f%f%f%f%f", cfg.WaveformType, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.Drive, cfg.FilterCutoff, cfg.Sweep, cfg.PitchDecay)))
 	hashBytes := hasher.Sum(nil)
@@ -340,7 +340,7 @@ func (cfg *Config) Color() color.RGBA {
 }
 
 // GenerateKickInMemory generates the kick waveform and returns it as a slice of integers.
-func (cfg *Config) GenerateKickInMemory() ([]int, error) {
+func (cfg *Settings) GenerateKickInMemory() ([]int, error) {
 	samples := cfg.generateMultiOscillatorSamples()
 	applySaturator(samples, cfg.SaturatorAmount)
 	applyMultiBandFiltering(samples, cfg.FilterBands, cfg.SampleRate)

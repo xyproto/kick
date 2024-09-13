@@ -6,8 +6,8 @@ import (
 )
 
 // Generate random kick settings
-func NewRandom() *Config {
-	cfg, _ := NewConfig(55.0, 30.0, 96000, 1.0, 16, nil)
+func NewRandom() *Settings {
+	cfg, _ := NewSettings(55.0, 30.0, 96000, 1.0, 16, nil)
 	cfg.Attack = rand.Float64() * 0.02
 	cfg.Decay = 0.2 + rand.Float64()*0.8
 	cfg.Sustain = rand.Float64() * 0.5
@@ -31,8 +31,8 @@ func NewRandom() *Config {
 }
 
 // NewExperimental with more extreme parameters for a truly experimental sound
-func NewExperimental(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(80.0, 20.0, sampleRate, duration, bitDepth, output) // More extreme pitch decay
+func NewExperimental(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(80.0, 20.0, sampleRate, duration, bitDepth, output) // More extreme pitch decay
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +51,8 @@ func NewExperimental(sampleRate int, duration float64, bitDepth int, output io.W
 }
 
 // NewLinnDrum emulates the LinnDrum bass drum, known for its punchy and iconic sound
-func NewLinnDrum(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(60.0, 40.0, sampleRate, duration, bitDepth, output)
+func NewLinnDrum(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(60.0, 40.0, sampleRate, duration, bitDepth, output)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func NewLinnDrum(sampleRate int, duration float64, bitDepth int, output io.Write
 }
 
 // NewDeepHouse creates a kick drum perfect for Deep House music
-func NewDeepHouse(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(45.0, 25.0, sampleRate, duration, bitDepth, output)
+func NewDeepHouse(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(45.0, 25.0, sampleRate, duration, bitDepth, output)
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +92,8 @@ func NewDeepHouse(sampleRate int, duration float64, bitDepth int, output io.Writ
 	return cfg, nil
 }
 
-func New606(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(65.0, 45.0, sampleRate, duration, bitDepth, output)
+func New606(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(65.0, 45.0, sampleRate, duration, bitDepth, output)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +112,8 @@ func New606(sampleRate int, duration float64, bitDepth int, output io.WriteSeeke
 	return cfg, nil
 }
 
-func New707(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(60.0, 40.0, sampleRate, duration, bitDepth, output)
+func New707(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(60.0, 40.0, sampleRate, duration, bitDepth, output)
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +132,8 @@ func New707(sampleRate int, duration float64, bitDepth int, output io.WriteSeeke
 	return cfg, nil
 }
 
-func New808(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(55.0, 30.0, sampleRate, duration, bitDepth, output)
+func New808(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(55.0, 30.0, sampleRate, duration, bitDepth, output)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +152,8 @@ func New808(sampleRate int, duration float64, bitDepth int, output io.WriteSeeke
 	return cfg, nil
 }
 
-func New909(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Config, error) {
-	cfg, err := NewConfig(70.0, 50.0, sampleRate, duration, bitDepth, output)
+func New909(sampleRate int, duration float64, bitDepth int, output io.WriteSeeker) (*Settings, error) {
+	cfg, err := NewSettings(70.0, 50.0, sampleRate, duration, bitDepth, output)
 	if err != nil {
 		return nil, err
 	}
