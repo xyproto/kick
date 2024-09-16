@@ -1,28 +1,24 @@
 
 # Kick
 
-This is a Go package, command line utility and GUI program for generating kick drum audio samples.
+This is a Go package together with a command line utility for generating kick drum audio samples.
 
 Note that the project is a bit experimental, a work in progress and that the generated samples aren't quite right, yet.
-
-![screenshot](img/screenshot.png)
 
 ## Contents
 
 - A Go package for generating kick drum samples with a wide variety of parameters.
 - A command-line utility for generating kick drum samples (`cmd/kick`).
-- A GUI that allows the user to tweak synth settings and also evolve settings closer to a given audio sample using genetic algorithms (`cmd/mutator`).
 
 ## Requirements
 
 * `go` for building the executables.
-* `mpv` or `ffmpeg` for playing the generated samples, when using `cmd/kick` or `cmd/mutator`.
+* `mpv` or `ffmpeg` for playing the generated samples, when using `cmd/kick`.
 
 ## Installation
 
 ```sh
 go install github.com/xyproto/kick/cmd/kick@latest
-go install github.com/xyproto/kick/cmd/mutator@latest
 ```
 
 ## Usage
