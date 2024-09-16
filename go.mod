@@ -6,7 +6,6 @@ require (
 	github.com/AllenDang/giu v0.8.1
 	github.com/go-audio/audio v1.0.0
 	github.com/go-audio/wav v1.1.0
-	github.com/gordonklaus/portaudio v0.0.0-20230709114228-aafa478834f5
 )
 
 require (
