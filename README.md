@@ -5,6 +5,8 @@ This is a Go package together with a command line utility for generating kick dr
 
 Note that the project is a bit experimental, a work in progress and that the generated samples aren't quite right, yet.
 
+This project is now archived and [synth](https://github.com/xyproto/synth) is a continuation of it.
+
 ## Contents
 
 - A Go package for generating kick drum samples with a wide variety of parameters.
